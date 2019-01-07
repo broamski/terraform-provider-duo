@@ -43,6 +43,7 @@ type Integration struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 	IKey string `json:"integration_key"`
+	SKey string `json:"secret_key"`
 }
 
 type IntegrationResult struct {
@@ -75,6 +76,7 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", result.Response.Name)
 	d.Set("type", result.Response.Type)
 	d.Set("ikey", result.Response.IKey)
+	d.Set("skey", result.Response.SKey)
 
 	return resourceIntegrationRead(d, meta)
 }
@@ -106,6 +108,8 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", result.Response.Name)
 	d.Set("type", result.Response.Type)
 	d.Set("ikey", result.Response.IKey)
+	d.Set("skey", result.Response.SKey)
+
 	return nil
 }
 
