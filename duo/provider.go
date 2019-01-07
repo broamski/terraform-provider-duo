@@ -36,6 +36,7 @@ func Provider() *schema.Provider {
 			"duo_admin_auth_factors": resourceAdminAuthFactors(),
 			"duo_integration":        resourceIntegration(),
 			"duo_user":               resourceUser(),
+			"duo_phone":              resourcePhone(),
 		},
 	}
 }
