@@ -73,11 +73,6 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("could not create duo integration %s %s", result.Stat, *result.Message)
 	}
 	d.SetId(result.Response.IKey)
-	d.Set("name", result.Response.Name)
-	d.Set("type", result.Response.Type)
-	d.Set("ikey", result.Response.IKey)
-	d.Set("skey", result.Response.SKey)
-
 	return resourceIntegrationRead(d, meta)
 }
 
@@ -109,7 +104,6 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("type", result.Response.Type)
 	d.Set("ikey", result.Response.IKey)
 	d.Set("skey", result.Response.SKey)
-
 	return nil
 }
 
@@ -149,16 +143,13 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	var deleteResult struct {
-		duoapi.StatResult
-		Response string
-	}
-	err = json.Unmarshal(body, &deleteResult)
+	var result deleteResult
+	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return err
 	}
-	if deleteResult.Stat != "OK" {
-		return fmt.Errorf("there was a problem deleting ikey %s: %s", iKey, *deleteResult.Message)
+	if result.Stat != "OK" {
+		return fmt.Errorf("there was a problem deleting ikey %s: %s", iKey, *result.Message)
 	}
 	return nil
 }
