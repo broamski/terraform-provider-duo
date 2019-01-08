@@ -32,11 +32,12 @@ func Provider() *schema.Provider {
 		},
 		ConfigureFunc: providerConfigure,
 		ResourcesMap: map[string]*schema.Resource{
-			"duo_admin":              resourceAdmin(),
-			"duo_admin_auth_factors": resourceAdminAuthFactors(),
-			"duo_integration":        resourceIntegration(),
-			"duo_user":               resourceUser(),
-			"duo_phone":              resourcePhone(),
+			"duo_admin":                  resourceAdmin(),
+			"duo_admin_auth_factors":     resourceAdminAuthFactors(),
+			"duo_integration":            resourceIntegration(),
+			"duo_user":                   resourceUser(),
+			"duo_phone":                  resourcePhone(),
+			"duo_user_phone_association": resourceUserPhoneAssociation(),
 		},
 	}
 }
@@ -61,4 +62,9 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		"terraform-provider-duo",
 	)
 	return duoClient, nil
+}
+
+type deleteResult struct {
+	duoapi.StatResult
+	Response string
 }
