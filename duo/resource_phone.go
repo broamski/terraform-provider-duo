@@ -52,24 +52,13 @@ func resourcePhone() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"phone_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
-}
-
-type Phone struct {
-	ID        string `json:"phone_id"`
-	Number    string `json:"number"`
-	Name      string `json:"name"`
-	Extension string `json:"extension"`
-	Type      string `json:"type"`
-	Platform  string `json:"platform"`
-	Predelay  string `json:"predelay"`
-	Postdelay string `json:"posstdelay"`
-}
-
-type PhoneResult struct {
-	duoapi.StatResult
-	Response Phone
 }
 
 func resourcePhoneCreate(d *schema.ResourceData, meta interface{}) error {
@@ -102,7 +91,7 @@ func resourcePhoneCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	result := &PhoneResult{}
+	result := &admin.GetPhoneResult{}
 	err = json.Unmarshal(body, result)
 	if err != nil {
 		return err
@@ -117,7 +106,7 @@ func resourcePhoneCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("could not create phone %s %s", result.Stat, *result.Message)
 	}
 
-	d.SetId(result.Response.ID)
+	d.SetId(result.Response.PhoneID)
 	return resourcePhoneRead(d, meta)
 }
 
@@ -127,12 +116,7 @@ func resourcePhoneRead(d *schema.ResourceData, meta interface{}) error {
 
 	pid := d.Id()
 
-	_, body, err := duoAdminClient.SignedCall("GET", fmt.Sprintf("/admin/v1/phones/%s", pid), nil, duoapi.UseTimeout)
-	if err != nil {
-		return err
-	}
-	result := &PhoneResult{}
-	err = json.Unmarshal(body, result)
+	result, err := duoAdminClient.GetPhone(pid)
 	if err != nil {
 		return err
 	}
@@ -152,6 +136,7 @@ func resourcePhoneRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform", result.Response.Platform)
 	d.Set("predelay", result.Response.Predelay)
 	d.Set("postdelay", result.Response.Postdelay)
+	d.Set("phone_id", result.Response.PhoneID)
 	return nil
 }
 
@@ -189,7 +174,7 @@ func resourcePhoneUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	result := &PhoneResult{}
+	result := &admin.GetPhoneResult{}
 	err = json.Unmarshal(body, result)
 	if err != nil {
 		return err
@@ -210,16 +195,13 @@ func resourcePhoneDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	var deleteResult struct {
-		duoapi.StatResult
-		Response string
-	}
-	err = json.Unmarshal(body, &deleteResult)
+	var result deleteResult
+	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return err
 	}
-	if deleteResult.Stat != "OK" {
-		return fmt.Errorf("there was a problem deleting phone %s: %s", pid, *deleteResult.Message)
+	if result.Stat != "OK" {
+		return fmt.Errorf("there was a problem deleting phone %s: %s", pid, *result.Message)
 	}
 	return nil
 }
