@@ -59,26 +59,13 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"user_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
-}
-
-type User struct {
-	Username string `json:"username"`
-	UserID   string `json:"user_id"`
-	Alias1   string `json:"alias1"`
-	Alias2   string `json:"alias2"`
-	Alias3   string `json:"alias3"`
-	Alias4   string `json:"alias4"`
-	RealName string `json:"realname"`
-	Email    string `json:"email"`
-	Status   string `json:"status"`
-	Notes    string `json:"notes"`
-}
-
-type UserResult struct {
-	duoapi.StatResult
-	Response User
 }
 
 func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
@@ -109,7 +96,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	result := &UserResult{}
+	result := &admin.GetUserResult{}
 	err = json.Unmarshal(body, result)
 	if err != nil {
 		return err
@@ -129,16 +116,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	uid := d.Id()
 
-	// result, err := duoAdminClient.GetUser(uid)
-	// if err != nil {
-	// 	return err
-	// }
-	_, body, err := duoAdminClient.SignedCall("GET", fmt.Sprintf("/admin/v1/users/%s", uid), nil, duoapi.UseTimeout)
-	if err != nil {
-		return err
-	}
-	result := &UserResult{}
-	err = json.Unmarshal(body, result)
+	result, err := duoAdminClient.GetUser(uid)
 	if err != nil {
 		return err
 	}
@@ -160,6 +138,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("email", user.Email)
 	d.Set("status", user.Status)
 	d.Set("notes", user.Notes)
+	d.Set("user_id", user.UserID)
 	return nil
 }
 
@@ -202,7 +181,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	result := &UserResult{}
+	result := &admin.GetUserResult{}
 	err = json.Unmarshal(body, result)
 	if err != nil {
 		return err
@@ -223,16 +202,14 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	var deleteResult struct {
-		duoapi.StatResult
-		Response string
-	}
-	err = json.Unmarshal(body, &deleteResult)
+
+	var result deleteResult
+	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return err
 	}
-	if deleteResult.Stat != "OK" {
-		return fmt.Errorf("there was a problem deleting user %s: %s", userID, *deleteResult.Message)
+	if result.Stat != "OK" {
+		return fmt.Errorf("there was a problem deleting user %s: %s", userID, *result.Message)
 	}
 	return nil
 }
