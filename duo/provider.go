@@ -29,6 +29,12 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("DUO_API_HOST", nil),
 				Description: "Duo AdminAPI Integration API Server",
 			},
+			"insecure": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("DUO_INSECURE", false),
+				Description: "Whether to verify the server's certificate chain and host name",
+			},
 		},
 		ConfigureFunc: providerConfigure,
 		ResourcesMap: map[string]*schema.Resource{
@@ -61,6 +67,11 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		apiHost,
 		"terraform-provider-duo",
 	)
+
+	if d.Get("insecure").(bool) {
+		duoClient.SetInsecure()
+	}
+
 	return duoClient, nil
 }
 
